@@ -47,8 +47,6 @@ public class Server {
 		System.out.println("Message client:" + inputLine);
 		// TODO: Recibe el mensaje del cliente y lo cifra con la llave privada del servidor
 
-
-
 		outputLine = "Connection stablished";
 		writeOut.println(outputLine);
 		System.out.println("Message answer: "+ outputLine );
