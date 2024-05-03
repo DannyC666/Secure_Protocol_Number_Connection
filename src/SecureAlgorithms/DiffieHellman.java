@@ -1,3 +1,5 @@
+package SecureAlgorithms;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -7,7 +9,7 @@ public class DiffieHellman {
     public static int keySizeInBits = 175;
 
     // Function to generate a random private key
-    public static BigInteger generateRandomPrivateKey() {
+    public  BigInteger generateRandomPrivateKey() {
         // Create a secure random number generator
         SecureRandom random = new SecureRandom();
         
