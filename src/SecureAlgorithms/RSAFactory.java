@@ -10,7 +10,6 @@ public class RSAFactory {
 
     public RSAFactory() throws NoSuchAlgorithmException {
     }
-
     public void getKeys()  {
        keyPairGenerator.initialize(4096);
        KeyPair keyPair = keyPairGenerator.generateKeyPair();
@@ -19,9 +18,7 @@ public class RSAFactory {
        PrivateKey privateKey = keyPair.getPrivate();
        pubKey = publicKey;
        privKey = privateKey;
-
    }
-
     public PrivateKey getPrivKey() {
         return privKey;
     }

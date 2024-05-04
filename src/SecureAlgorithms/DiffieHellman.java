@@ -57,29 +57,50 @@ public class DiffieHellman {
         }
         return result;
     }
-
     public SecretKeySpec[] makeSecureAESKeys(byte[][] byteKeys){
         SecretKeySpec[] symmetricKeys = new SecretKeySpec[2];
         byte[] datakey = byteKeys[0];
         byte[] MACKey = byteKeys[1];
         symmetricKeys[0] = new SecretKeySpec(datakey, "AES");
         symmetricKeys[1] = new SecretKeySpec(MACKey, "AES");
-        SecretKeySpec dataKeySpec = symmetricKeys[0];
-        SecretKeySpec MACKeySpec = symmetricKeys[1];
         return  symmetricKeys;
     }
-    public String AESEncryption(String message, SecretKeySpec secretKey) throws NoSuchPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException {
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] encryptedMessage = cipher.doFinal(message.getBytes());
-        return Base64.getEncoder().encodeToString(encryptedMessage);
+    public String AESEncryptionAB1(String message, SecretKeySpec secretKey) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedMessage = cipher.doFinal(message.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedMessage);
+        }catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+        e.printStackTrace();
+        return null;
     }
-    public String AESDecryption(String encryptedMessage, SecretKeySpec secretKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedMessage);
-        Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, secretKey);
-        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
-        return new String(decryptedBytes);
+
+    }
+    public String AESDecryptionAB1(String encryptedMessage, SecretKeySpec secretKey) {
+        try {
+            byte[] encryptedBytes = Base64.getDecoder().decode(encryptedMessage);
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+            return new String(decryptedBytes);
+        }catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public String encryptHmac(String message, SecretKey secretKey) {
+        try {
+
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(secretKey);
+            byte[] hmac = mac.doFinal(message.getBytes());
+            return Base64.getEncoder().encodeToString(hmac);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

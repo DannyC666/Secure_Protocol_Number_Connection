@@ -2,16 +2,15 @@ package ClientConfig;
 
 import SecureAlgorithms.DiffieHellman;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.util.Base64;
+import java.util.Objects;
 
 public class ClientProtocol {
     public static PublicKey publicKey;
@@ -20,6 +19,8 @@ public class ClientProtocol {
     public static String G;
     public static String Gx;
     private BigInteger symmetricKey;
+    SecretKeySpec AESDataKey ;
+    SecretKeySpec AESAuthKey;
     private static final DiffieHellman diffieHellman = new DiffieHellman();
     public ClientProtocol(){
 
@@ -32,34 +33,49 @@ public class ClientProtocol {
             String fromUser = stdIn.readLine();
             // Sends trough network
             pOut.println(fromUser);
-            String fromServer;
-            // Reads what is incoming from network
-            // And if it's not null it prints it
-            if ((fromServer = pIn.readLine()) != null) {
-                String[] serverAnswer = fromServer.split(":");
-                // Primera parte: Verificar comunicacion con el SV
-                decodePublicKey(serverAnswer[2]);
-                if(verfyRSAContent(serverAnswer[0], serverAnswer[1])){
+            // Recibir la llave publica del servidor
+            String fromServer = pIn.readLine();
+            String[] serverAnswer = fromServer.split(":");
+            decodePublicKey(serverAnswer[2]);
+            // Verofica que si sea el servidor el que aitentica
+            if(verfyRSAContent(serverAnswer[0], serverAnswer[1])){
                     pOut.println("OK:ACK");
-                }else{
+            }else{
                     pOut.println("ERROR!");
-                }
-                // Segudna parte: Generar claves DH y verificarlas
-                String[] serverGenDH = pIn.readLine().split(":");
-                if(verifyDH(serverGenDH)){
-                    pOut.println("OK DH");
-                    String Gy = genLocalDiffieHellmanKey().toString();
-                    pOut.println(Gy);
-
-
-
-
-                }else {
-                    pOut.println("ERROR!");
-                }
-                // Starts login in continue  :)
-                System.out.println(pIn.readLine());
             }
+                // Segunda parte: Generar claves DH y verificarlas
+            String[] serverGenDH = pIn.readLine().split(":");
+            if(verifyDH(serverGenDH)) {
+                pOut.println("OK DH");
+                String Gy = genLocalDiffieHellmanKey().toString();
+                pOut.println(Gy);
+                genSecretKeys();
+                pIn.readLine();
+                // Mandar seguramente el login y password
+                System.out.println("Login:");
+                fromUser = stdIn.readLine();
+                String encryptionLogIn = diffieHellman.AESEncryptionAB1(fromUser,AESDataKey);
+                pOut.println(encryptionLogIn);
+                System.out.println("Password:");
+                fromUser = stdIn.readLine();
+                String encryptionPassword = diffieHellman.AESEncryptionAB1(fromUser,AESDataKey);
+                pOut.println(encryptionPassword);
+                    String flagServer =pIn.readLine();if (Objects.equals(flagServer, "OK Login")){System.out.println("Succesfully login");System.out.println("Enter a query:");fromUser = stdIn.readLine();// Send Query
+                    String encryptionQuery = diffieHellman.AESEncryptionAB1(fromUser,AESDataKey);
+                    String encryptionHMACQuery = diffieHellman.encryptHmac(fromUser,AESAuthKey);
+                    pOut.println(encryptionQuery);
+                    pOut.println(encryptionHMACQuery);
+                    // ReceiveQuery
+                    String repliedQuery = pIn.readLine();
+                    String repliedQueryHASH = pIn.readLine();
+                    //String repliedQuery = stdIn.readLine().split(":")[1];
+                    if( verifyQuery(repliedQuery,repliedQueryHASH)){
+                            System.out.println("Successful response:"+ diffieHellman.AESDecryptionAB1(repliedQuery,AESDataKey));
+                    }}
+            } else {
+                    pOut.println("ERROR!");
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -115,4 +131,26 @@ public class ClientProtocol {
         this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
         return Gy;
     }
+
+    private void genSecretKeys(){
+        byte[][] partitionKey = diffieHellman.divideDHKey(symmetricKey);
+        SecretKeySpec[] secretKeys= diffieHellman.makeSecureAESKeys(partitionKey);
+        AESDataKey = secretKeys[0];
+        AESAuthKey = secretKeys[1];
+    }
+
+    private void authLogInverfy(String login, String password){
+
+    }
+
+    private boolean verifyQuery(String queryEncrypted, String receivedQueryHMAC){
+        boolean queryAccept = false;
+        String decryptedQuery = diffieHellman.AESDecryptionAB1(queryEncrypted,AESDataKey);
+        String localHMACQuery = diffieHellman.encryptHmac(decryptedQuery, AESAuthKey);
+        if(Objects.equals(localHMACQuery, receivedQueryHMAC) && !Objects.equals(decryptedQuery, "Error Query")){
+            queryAccept = true;
+        }
+        return  queryAccept;
+    }
+
 }

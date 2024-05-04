@@ -2,10 +2,8 @@ package ServerConfig;
 
 import SecureAlgorithms.DiffieHellman;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
@@ -15,6 +13,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
 
 public class ServerProtocol {
     public static int keySize = 175; // Tamaño de clave recomendado por OpenSSL
@@ -32,7 +31,8 @@ public class ServerProtocol {
     public static PublicKey publicKey;
     private static PrivateKey privateKey;
     private BigInteger symmetricKey;
-    private BigInteger authCode;
+    SecretKeySpec AESDataKey;
+    SecretKeySpec AESAuthKey;
     private BigInteger Gx;
     public static final  BigInteger P = new BigInteger(pDiffieHelman.replaceAll(":", ""), 16);
     public static final int G = 2;
@@ -67,18 +67,27 @@ public class ServerProtocol {
 
         // Tercera parte: Recibir Gy y calcular la llave simetrica
         BigInteger Gy = new BigInteger(readIn.readLine());
-        System.out.println(Gy);
         genLocalDiffieHellmanKey(Gy);
         writeOut.println("Continue :)");
-
         // Fourth part: divide DH key in symmetric key and verification code
-        byte[][] partitionKey = diffieHellman.divideDHKey(symmetricKey);
+        genSecretKeys();
+        String login = readIn.readLine();
+        String password = readIn.readLine();
+        System.out.println("Received Login:" + diffieHellman.AESDecryptionAB1(login,AESDataKey));
+        System.out.println("Received Password:" + diffieHellman.AESDecryptionAB1(password,AESDataKey));
+        writeOut.println("OK Login");
 
-        // Convertir el primer elemento a BigInteger y guardarlo en symmetricKey
-        symmetricKey = new BigInteger(partitionKey[0]);
+        // Recibir query
+        String queryAB1 = readIn.readLine();
+        String queryHMAC = readIn.readLine();
+        String queryMessage = replyQuery(queryAB1, queryHMAC);
+        String encryptionQueryMessage = diffieHellman.AESEncryptionAB1(queryMessage,AESDataKey);
+        String encryptionHMACQueryMessage = diffieHellman.encryptHmac(queryMessage,AESAuthKey);
+        writeOut.println(encryptionQueryMessage);
+        writeOut.println(encryptionHMACQueryMessage);
 
-        // Convertir el segundo elemento a BigInteger y guardarlo en authCode
-        authCode = new BigInteger(partitionKey[1]);
+
+
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -109,8 +118,24 @@ public class ServerProtocol {
     }
 
     private void genLocalDiffieHellmanKey(BigInteger Gy){
-        x = diffieHellman.generateRandomPrivateKey();
         this.symmetricKey = diffieHellman.getSymmetricKey(Gy,x,P);
+    }
+
+    private void genSecretKeys(){
+        byte[][] partitionKey = diffieHellman.divideDHKey(symmetricKey);
+        SecretKeySpec[] secretKeys= diffieHellman.makeSecureAESKeys(partitionKey);
+        AESDataKey = secretKeys[0];
+        AESAuthKey = secretKeys[1];
+    }
+
+    private String replyQuery(String queryEncrypted, String receivedQueryHMAC){
+        String responseQuery = "Error Query";
+        String decyptedQuery = diffieHellman.AESDecryptionAB1(queryEncrypted,AESDataKey);
+        String localHMACQuery = diffieHellman.encryptHmac(decyptedQuery, AESAuthKey);
+        if(Objects.equals(localHMACQuery, receivedQueryHMAC)){
+            responseQuery = "Example response to "+ decyptedQuery;
+        }
+        return  responseQuery;
     }
 
 }
