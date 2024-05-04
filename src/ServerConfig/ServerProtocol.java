@@ -79,6 +79,7 @@ public class ServerProtocol {
 
         // Convertir el segundo elemento a BigInteger y guardarlo en authCode
         authCode = new BigInteger(partitionKey[1]);
+
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -109,8 +110,8 @@ public class ServerProtocol {
     }
 
     private void genLocalDiffieHellmanKey(BigInteger Gy){
-        x = diffieHellman.generateRandomPrivateKey();
         this.symmetricKey = diffieHellman.getSymmetricKey(Gy,x,P);
+        System.out.println("DH key: " + symmetricKey);
     }
 
 }

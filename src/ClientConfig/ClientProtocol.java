@@ -20,6 +20,7 @@ public class ClientProtocol {
     public static String G;
     public static String Gx;
     private BigInteger symmetricKey;
+    private BigInteger authCode;
     private static final DiffieHellman diffieHellman = new DiffieHellman();
     public ClientProtocol(){
 
@@ -33,10 +34,10 @@ public class ClientProtocol {
             // Sends trough network
             pOut.println(fromUser);
             String fromServer;
-            // Reads what is incoming from network
-            // And if it's not null it prints it
+            // Reads what is incoming from network and if it's not null it prints it
             if ((fromServer = pIn.readLine()) != null) {
                 String[] serverAnswer = fromServer.split(":");
+
                 // Primera parte: Verificar comunicacion con el SV
                 decodePublicKey(serverAnswer[2]);
                 if(verfyRSAContent(serverAnswer[0], serverAnswer[1])){
@@ -44,13 +45,24 @@ public class ClientProtocol {
                 }else{
                     pOut.println("ERROR!");
                 }
-                // Segudna parte: Generar claves DH y verificarlas
+
+                // Segunda parte: Generar claves DH y verificarlas
                 String[] serverGenDH = pIn.readLine().split(":");
-                if(verifyDH(serverGenDH)){
+                if(verifyDH(serverGenDH)) {
                     pOut.println("OK DH");
                     String Gy = genLocalDiffieHellmanKey().toString();
                     pOut.println(Gy);
-                }else {
+
+                    // Third part: divide DH key in symmetric key and verification code
+                    byte[][] partitionKey = diffieHellman.divideDHKey(symmetricKey);
+
+                    // Convertir el primer elemento a BigInteger y guardarlo en symmetricKey
+                    symmetricKey = new BigInteger(partitionKey[0]);
+
+                    // Convertir el segundo elemento a BigInteger y guardarlo en authCode
+                    authCode = new BigInteger(partitionKey[1]);
+                    
+                } else {
                     pOut.println("ERROR!");
                 }
                 // Starts login in continue  :)
@@ -109,6 +121,7 @@ public class ClientProtocol {
         BigInteger Gy = diffieHellman.getGpowerXY(y,bigIntegerP,bigIntegerG);
         BigInteger bigIntegerGx = new BigInteger(Gx);
         this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
+        System.out.println("DH key: " + symmetricKey);
         return Gy;
     }
 }
