@@ -7,16 +7,13 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Objects;
 
 public class ServerProtocol {
-    public static int keySize = 175; // Tamaño de clave recomendado por OpenSSL
     public static String pDiffieHelman = "00:80:80:84:ff:3e:5b:97:7c:32:52:59:32:77:5d:" +
             "ea:78:21:1e:dd:01:4c:8a:48:9b:c9:87:47:25:69:" +
             "ea:c6:a5:7c:87:1f:2c:e9:86:16:ad:86:97:f2:fe:" +
@@ -33,7 +30,6 @@ public class ServerProtocol {
     private BigInteger symmetricKey;
     SecretKeySpec AESDataKey;
     SecretKeySpec AESAuthKey;
-    private BigInteger Gx;
     public static final  BigInteger P = new BigInteger(pDiffieHelman.replaceAll(":", ""), 16);
     public static final int G = 2;
     private static final DiffieHellman  diffieHellman = new DiffieHellman();
@@ -48,36 +44,35 @@ public class ServerProtocol {
 
     public  void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String inputLine;
-        String outputLine;
-
-        // Primera parte: El Servidor recibe el primer mensaje del cliente y se autentica
+        // 3. Server receives a SYN request form client and reply
         inputLine = readIn.readLine();
         System.out.println("Message client:" + inputLine);
         String encryptedMessage = encryptMessages(inputLine);
         String publicKeySerialized = serializeKeys(publicKey);
         writeOut.println(encryptedMessage+":"+inputLine+":"+publicKeySerialized);
         inputLine = readIn.readLine();
+        System.out.println("Client ACK confirm: "+ inputLine);
 
-        // Segunda parte: El servidor procede a generar G,P,Gx
+        // 6-7. Server generate and send to client DiffieHellman params
         String symmetricPack = genDHParams();
         writeOut.println(symmetricPack);
-        System.out.println("Client ACK confirm: "+ inputLine);
         inputLine = readIn.readLine();
         System.out.println("Client DiffieHellman confirm: "+ inputLine);
 
-        // Tercera parte: Recibir Gy y calcular la llave simetrica
+        // 11.1 Server receive Gy and  11.2 agenerate MACKey(AB_2) and AESKey(AB_1)
         BigInteger Gy = new BigInteger(readIn.readLine());
         genLocalDiffieHellmanKey(Gy);
         writeOut.println("Continue :)");
-        // Fourth part: divide DH key in symmetric key and verification code
         genSecretKeys();
+
+        // 15. Receive and verify login-password from Client
         String login = readIn.readLine();
         String password = readIn.readLine();
         System.out.println("Received Login:" + diffieHellman.AESDecryptionAB1(login,AESDataKey));
         System.out.println("Received Password:" + diffieHellman.AESDecryptionAB1(password,AESDataKey));
         writeOut.println("OK Login");
 
-        // Recibir query
+        // 19-20. Receive and verify query
         String queryAB1 = readIn.readLine();
         String queryHMAC = readIn.readLine();
         String queryMessage = replyQuery(queryAB1, queryHMAC);
@@ -107,11 +102,11 @@ public class ServerProtocol {
     }
 
     private String genDHParams() throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
-        this.Gx = diffieHellman.getGpowerXY(x,P, BigInteger.valueOf(G));
-        String packetParams = G+":"+P+":"+Gx;
+        BigInteger gx = diffieHellman.getGpowerXY(x, P, BigInteger.valueOf(G));
+        String packetParams = G+":"+P+":"+ gx;
         String encryptG = encryptMessages(String.valueOf(G));
         String encryptP = encryptMessages(String.valueOf(P));
-        String encryptGx = encryptMessages(String.valueOf(Gx));
+        String encryptGx = encryptMessages(String.valueOf(gx));
         return encryptG+":"+encryptP+":"+encryptGx+":"+packetParams;
     }
 
