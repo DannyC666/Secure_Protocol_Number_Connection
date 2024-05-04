@@ -20,7 +20,7 @@ public class Client {
 
     public  static  void main(String[] args) throws IOException {
         System.out.println("ClientConfig.Client starts");
-        
+
         Socket socket = null;
         PrintWriter writer = null;
         BufferedReader reader = null;

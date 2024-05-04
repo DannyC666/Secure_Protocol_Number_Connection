@@ -31,7 +31,7 @@ public class DiffieHellman {
     }
 
     // Function to calculate g^privateKey % p (public key generation)
-    public static BigInteger getGpowerXY(BigInteger privateKey, BigInteger p, BigInteger g) {
+    public  BigInteger getGpowerXY(BigInteger privateKey, BigInteger p, BigInteger g) {
         return g.modPow(privateKey, p);
     }
 

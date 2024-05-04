@@ -14,7 +14,6 @@ import java.util.Objects;
 
 public class ClientProtocol {
     public static PublicKey publicKey;
-    private static BigInteger y; // Numero aleatorio privado local
     public static String P;
     public static String G;
     public static String Gx;
@@ -123,12 +122,13 @@ public class ClientProtocol {
         }
     }
     private  BigInteger genLocalDiffieHellmanKey(){
-        y = diffieHellman.generateRandomPrivateKey();
+        // Numero aleatorio privado local
+        BigInteger y = diffieHellman.generateRandomPrivateKey();
         BigInteger bigIntegerP = new BigInteger(P);
         BigInteger bigIntegerG = new BigInteger(G);
         BigInteger Gy = diffieHellman.getGpowerXY(y,bigIntegerP,bigIntegerG);
         BigInteger bigIntegerGx = new BigInteger(Gx);
-        this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
+        this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx, y,bigIntegerP);
         return Gy;
     }
 
@@ -139,9 +139,9 @@ public class ClientProtocol {
         AESAuthKey = secretKeys[1];
     }
 
-    private void authLogInverfy(String login, String password){
-
-    }
+//    private void authLogInverfy(String login, String password){
+//
+//    }
 
     private boolean verifyQuery(String queryEncrypted, String receivedQueryHMAC){
         boolean queryAccept = false;

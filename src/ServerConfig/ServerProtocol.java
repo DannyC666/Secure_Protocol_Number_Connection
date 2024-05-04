@@ -86,8 +86,6 @@ public class ServerProtocol {
         writeOut.println(encryptionQueryMessage);
         writeOut.println(encryptionHMACQueryMessage);
 
-
-
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -109,7 +107,7 @@ public class ServerProtocol {
     }
 
     private String genDHParams() throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
-        this.Gx = DiffieHellman.getGpowerXY(x,P, BigInteger.valueOf(G));
+        this.Gx = diffieHellman.getGpowerXY(x,P, BigInteger.valueOf(G));
         String packetParams = G+":"+P+":"+Gx;
         String encryptG = encryptMessages(String.valueOf(G));
         String encryptP = encryptMessages(String.valueOf(P));
@@ -133,6 +131,7 @@ public class ServerProtocol {
         String decyptedQuery = diffieHellman.AESDecryptionAB1(queryEncrypted,AESDataKey);
         String localHMACQuery = diffieHellman.encryptHmac(decyptedQuery, AESAuthKey);
         if(Objects.equals(localHMACQuery, receivedQueryHMAC)){
+            System.out.println("Received Query:"+ decyptedQuery);
             responseQuery = "Example response to "+ decyptedQuery;
         }
         return  responseQuery;
