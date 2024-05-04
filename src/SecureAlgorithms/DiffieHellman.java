@@ -1,7 +1,10 @@
 package SecureAlgorithms;
 
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 public class DiffieHellman {
 
@@ -29,7 +32,32 @@ public class DiffieHellman {
     }
 
     // Function to calculate the symmetric key agreed upon by both parties
-    public static BigInteger getSymmetricKey(BigInteger publicKey, BigInteger privateKey, BigInteger p) {
+    public BigInteger getSymmetricKey(BigInteger publicKey, BigInteger privateKey, BigInteger p) {
         return publicKey.modPow(privateKey, p);
+    }
+
+    // Función para dividir la llave DH en clave de cifrado y clave para código HMAC
+    public byte[][] divideDHKey(BigInteger symmetricKey) {
+        byte[][] result = new byte[2][32];
+
+        try {
+            // Convertir la llave maestra a bytes
+            byte[] symmetricKeyBytes = symmetricKey.toByteArray();
+
+            // Crear un objeto MessageDigest para SHA-512
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+
+            // Calcular el digest
+            byte[] digest = md.digest(symmetricKeyBytes);
+
+            // Dividir el digest en dos mitades (256 bits cada una)
+            result[0] = Arrays.copyOfRange(digest, 0, 32); // Primeros 32 bytes (256 bits)
+            result[1] = Arrays.copyOfRange(digest, 32, 64); // Siguientes 32 bytes (256 bits)
+
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return result;
     }
 }

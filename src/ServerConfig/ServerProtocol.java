@@ -9,9 +9,11 @@ import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class ServerProtocol {
@@ -30,6 +32,7 @@ public class ServerProtocol {
     public static PublicKey publicKey;
     private static PrivateKey privateKey;
     private BigInteger symmetricKey;
+    private BigInteger authCode;
     private BigInteger Gx;
     public static final  BigInteger P = new BigInteger(pDiffieHelman.replaceAll(":", ""), 16);
     public static final int G = 2;
@@ -46,6 +49,7 @@ public class ServerProtocol {
     public  void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String inputLine;
         String outputLine;
+
         // Primera parte: El Servidor recibe el primer mensaje del cliente y se autentica
         inputLine = readIn.readLine();
         System.out.println("Message client:" + inputLine);
@@ -53,19 +57,28 @@ public class ServerProtocol {
         String publicKeySerialized = serializeKeys(publicKey);
         writeOut.println(encryptedMessage+":"+inputLine+":"+publicKeySerialized);
         inputLine = readIn.readLine();
+
         // Segunda parte: El servidor procede a generar G,P,Gx
         String symmetricPack = genDHParams();
         writeOut.println(symmetricPack);
         System.out.println("Client ACK confirm: "+ inputLine);
         inputLine = readIn.readLine();
         System.out.println("Client DiffieHellman confirm: "+ inputLine);
+
         // Tercera parte: Recibir Gy y calcular la llave simetrica
         BigInteger Gy = new BigInteger(readIn.readLine());
         System.out.println(Gy);
         genLocalDiffieHellmanKey(Gy);
         writeOut.println("Continue :)");
 
+        // Fourth part: divide DH key in symmetric key and verification code
+        byte[][] partitionKey = diffieHellman.divideDHKey(symmetricKey);
 
+        // Convertir el primer elemento a BigInteger y guardarlo en symmetricKey
+        symmetricKey = new BigInteger(partitionKey[0]);
+
+        // Convertir el segundo elemento a BigInteger y guardarlo en authCode
+        authCode = new BigInteger(partitionKey[1]);
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
