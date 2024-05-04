@@ -40,7 +40,7 @@ public class ClientProtocol {
                 // Primera parte: Verificar comunicacion con el SV
                 decodePublicKey(serverAnswer[2]);
                 if(verfyRSAContent(serverAnswer[0], serverAnswer[1])){
-                    pOut.println("OK");
+                    pOut.println("OK:ACK");
                 }else{
                     pOut.println("ERROR!");
                 }
@@ -50,6 +50,10 @@ public class ClientProtocol {
                     pOut.println("OK DH");
                     String Gy = genLocalDiffieHellmanKey().toString();
                     pOut.println(Gy);
+
+
+
+
                 }else {
                     pOut.println("ERROR!");
                 }
