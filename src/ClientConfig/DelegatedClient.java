@@ -11,6 +11,7 @@ public class DelegatedClient extends Thread {
     private Socket socket;
     PrintWriter writer = null;
     BufferedReader reader = null;
+    BufferedReader stdIn = null;
 
     public DelegatedClient(Socket socket, int idDelegatedClient) {
         this.socket = socket;
@@ -25,11 +26,11 @@ public class DelegatedClient extends Thread {
             writer = new PrintWriter(socket.getOutputStream(), true);
             // Reading from the socket
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+            // stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-            ClientProtocol.processResponse(stdIn, reader, writer);
+            ClientProtocol.processResponse(reader, writer);
 
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         finally {

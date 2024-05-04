@@ -22,8 +22,9 @@ public class ClientProtocol {
     private static BigInteger symmetricKey;
     private static BigInteger authCode;
     private static final DiffieHellman diffieHellman = new DiffieHellman();
+    private static BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-    public static  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
+    public static  void processResponse(BufferedReader pIn, PrintWriter pOut) {
         try {
             // Reads from terminal
             System.out.println("Write the message to send: ");
@@ -58,6 +59,12 @@ public class ClientProtocol {
 
                     // Convertir el segundo elemento a BigInteger y guardarlo en authCode
                     authCode = new BigInteger(partitionKey[1]);
+
+                    System.out.println("symmetricKey: " + symmetricKey);
+
+                    System.out.println();
+
+                    System.out.println("authCode: " + authCode);
 
                 } else {
                     pOut.println("ERROR!");

@@ -80,6 +80,12 @@ public class ServerProtocol {
         // Convertir el segundo elemento a BigInteger y guardarlo en authCode
         authCode = new BigInteger(partitionKey[1]);
 
+        System.out.println("symmetricKey: " + symmetricKey);
+
+        System.out.println();
+
+        System.out.println("authCode: " + authCode);
+
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
