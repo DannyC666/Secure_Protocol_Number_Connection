@@ -28,11 +28,14 @@ public class ServerProtocol {
 
 
     public static PublicKey publicKey;
-     private static PrivateKey privateKey;
+    private static PrivateKey privateKey;
+    private BigInteger symmetricKey;
+    private BigInteger Gx;
     public static final  BigInteger P = new BigInteger(pDiffieHelman.replaceAll(":", ""), 16);
     public static final int G = 2;
     private static final DiffieHellman  diffieHellman = new DiffieHellman();
-    private static  BigInteger x;
+    private static  BigInteger x; // Numero aleatorio privado local
+
 
     public ServerProtocol(PrivateKey privateKey ,PublicKey publicKey ) {
         ServerProtocol.privateKey = privateKey;
@@ -40,7 +43,7 @@ public class ServerProtocol {
         x = diffieHellman.generateRandomPrivateKey();
     }
 
-    public static void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public  void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String inputLine;
         String outputLine;
         // Primera parte: El Servidor recibe el primer mensaje del cliente y se autentica
@@ -56,6 +59,13 @@ public class ServerProtocol {
         System.out.println("Client ACK confirm: "+ inputLine);
         inputLine = readIn.readLine();
         System.out.println("Client DiffieHellman confirm: "+ inputLine);
+        // Tercera parte: Recibir Gy y calcular la llave simetrica
+        BigInteger Gy = new BigInteger(readIn.readLine());
+        System.out.println(Gy);
+        genLocalDiffieHellmanKey(Gy);
+        writeOut.println("Continue :)");
+
+
     }
 
     private static String encryptMessages(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -76,14 +86,18 @@ public class ServerProtocol {
 
     }
 
-    private static String genDHParams() throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
-        BigInteger Gx = DiffieHellman.getGpowerXY(x,P, BigInteger.valueOf(G));
+    private String genDHParams() throws NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+        this.Gx = DiffieHellman.getGpowerXY(x,P, BigInteger.valueOf(G));
         String packetParams = G+":"+P+":"+Gx;
         String encryptG = encryptMessages(String.valueOf(G));
         String encryptP = encryptMessages(String.valueOf(P));
         String encryptGx = encryptMessages(String.valueOf(Gx));
         return encryptG+":"+encryptP+":"+encryptGx+":"+packetParams;
+    }
 
+    private void genLocalDiffieHellmanKey(BigInteger Gy){
+        x = diffieHellman.generateRandomPrivateKey();
+        this.symmetricKey = diffieHellman.getSymmetricKey(Gy,x,P);
     }
 
 }

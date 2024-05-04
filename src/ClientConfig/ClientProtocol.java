@@ -1,10 +1,13 @@
 package ClientConfig;
 
+import SecureAlgorithms.DiffieHellman;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -12,6 +15,12 @@ import java.util.Base64;
 
 public class ClientProtocol {
     public static PublicKey publicKey;
+    private static BigInteger y; // Numero aleatorio privado local
+    public static String P;
+    public static String G;
+    public static String Gx;
+    private BigInteger symmetricKey;
+    private static final DiffieHellman diffieHellman = new DiffieHellman();
     public ClientProtocol(){
 
     }
@@ -39,9 +48,13 @@ public class ClientProtocol {
                 String[] serverGenDH = pIn.readLine().split(":");
                 if(verifyDH(serverGenDH)){
                     pOut.println("OK DH");
+                    String Gy = genLocalDiffieHellmanKey().toString();
+                    pOut.println(Gy);
                 }else {
                     pOut.println("ERROR!");
                 }
+                // Starts login in continue  :)
+                System.out.println(pIn.readLine());
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -55,21 +68,21 @@ public class ClientProtocol {
             cipher.init(Cipher.DECRYPT_MODE, publicKey);
             byte[] decryptedMessage = cipher.doFinal(Base64.getDecoder().decode(messageServerEncrypted));
             isServer = new String(decryptedMessage).equals(messageServer);
+
         } catch (NoSuchPaddingException | NoSuchAlgorithmException | InvalidKeyException | IllegalBlockSizeException |
                  BadPaddingException e) {
-            // Manejar las excepciones aquí
-            e.printStackTrace(); // Puedes imprimir el mensaje de error o realizar otro tipo de manejo
+            e.printStackTrace();
         }
         return isServer;
-}
+    }
     private static boolean verifyDH(String[] serverGenDH){
         boolean isServerAuth = false;
         String encryptG = serverGenDH[0];
         String encryptP = serverGenDH[1];
         String encryptGx =  serverGenDH[2];
-        String G = serverGenDH[3];
-        String P = serverGenDH[4];
-        String Gx =  serverGenDH[5];
+        G = serverGenDH[3];
+        P = serverGenDH[4];
+        Gx =  serverGenDH[5];
         if(verfyRSAContent(encryptG,G) && verfyRSAContent(encryptP,P)  && verfyRSAContent(encryptGx,Gx) ){
             isServerAuth = true;
         }
@@ -88,6 +101,14 @@ public class ClientProtocol {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
+    }
+    private  BigInteger genLocalDiffieHellmanKey(){
+        y = diffieHellman.generateRandomPrivateKey();
+        BigInteger bigIntegerP = new BigInteger(P);
+        BigInteger bigIntegerG = new BigInteger(G);
+        BigInteger Gy = diffieHellman.getGpowerXY(y,bigIntegerP,bigIntegerG);
+        BigInteger bigIntegerGx = new BigInteger(Gx);
+        this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
+        return Gy;
     }
 }

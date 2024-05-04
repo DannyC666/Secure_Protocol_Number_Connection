@@ -25,7 +25,7 @@ public class DelegatedServer extends Thread {
         try {
             PrintWriter writer = new PrintWriter(socketClient.getOutputStream(), true);
             BufferedReader reader = new BufferedReader(new InputStreamReader(socketClient.getInputStream()));
-            ServerProtocol.processMessage(reader,writer);
+            serverProtocol.processMessage(reader,writer);
             socketClient.close();
             writer.close();
             reader.close();
