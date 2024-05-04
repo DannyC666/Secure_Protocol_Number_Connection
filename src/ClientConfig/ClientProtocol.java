@@ -27,7 +27,7 @@ public class ClientProtocol {
     public  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
         try {
             // Reads from terminal
-            System.out.println("Write the message to send: ");
+            System.out.print("Write the message to send: ");
             String fromUser = stdIn.readLine();
             // Sends trough network
             pOut.println(fromUser);
@@ -71,7 +71,7 @@ public class ClientProtocol {
                     String flagServer =pIn.readLine();
                     if (Objects.equals(flagServer, "OK Login")){
                         System.out.println("Succesfully login");
-                        System.out.println("Enter a query:");
+                        System.out.print("Enter a query:");
                         fromUser = stdIn.readLine();// Send Query
                         String encryptionQuery = diffieHellman.AESEncryptionAB1(fromUser,AESDataKey);
                         String encryptionHMACQuery = diffieHellman.encryptHmac(fromUser,AESAuthKey);
