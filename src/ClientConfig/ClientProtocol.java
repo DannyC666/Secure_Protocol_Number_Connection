@@ -19,14 +19,11 @@ public class ClientProtocol {
     public static String P;
     public static String G;
     public static String Gx;
-    private BigInteger symmetricKey;
-    private BigInteger authCode;
+    private static BigInteger symmetricKey;
+    private static BigInteger authCode;
     private static final DiffieHellman diffieHellman = new DiffieHellman();
-    public ClientProtocol(){
 
-    }
-
-    public  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
+    public static  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
         try {
             // Reads from terminal
             System.out.println("Write the message to send: ");
@@ -61,7 +58,7 @@ public class ClientProtocol {
 
                     // Convertir el segundo elemento a BigInteger y guardarlo en authCode
                     authCode = new BigInteger(partitionKey[1]);
-                    
+
                 } else {
                     pOut.println("ERROR!");
                 }
@@ -71,6 +68,14 @@ public class ClientProtocol {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static BigInteger getSymmetricKey() {
+        return symmetricKey;
+    }
+
+    public static void setSymmetricKey(BigInteger symmetricKey) {
+        ClientProtocol.symmetricKey = symmetricKey;
     }
 
     private static boolean verfyRSAContent(String messageServerEncrypted, String messageServer) {
@@ -114,13 +119,14 @@ public class ClientProtocol {
             e.printStackTrace();
         }
     }
-    private  BigInteger genLocalDiffieHellmanKey(){
+    private static  BigInteger genLocalDiffieHellmanKey(){
         y = diffieHellman.generateRandomPrivateKey();
         BigInteger bigIntegerP = new BigInteger(P);
         BigInteger bigIntegerG = new BigInteger(G);
         BigInteger Gy = diffieHellman.getGpowerXY(y,bigIntegerP,bigIntegerG);
         BigInteger bigIntegerGx = new BigInteger(Gx);
-        this.symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
+        BigInteger symmetricKey = diffieHellman.getSymmetricKey(bigIntegerGx,y,bigIntegerP);
+        setSymmetricKey(bigIntegerGx);
         System.out.println("DH key: " + symmetricKey);
         return Gy;
     }

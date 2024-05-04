@@ -1,53 +1,43 @@
 package ClientConfig;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.net.Socket;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.util.Base64;
+import java.util.Scanner;
 
 public class Client {
 
     public static final int PORT = 6666;
     public static final String SERVER = "localhost";
     public static PublicKey publicKey;
-    private static ClientProtocol clientProtocol = new ClientProtocol();
 
     public  static  void main(String[] args) throws IOException {
         System.out.println("ClientConfig.Client starts");
         
         Socket socket = null;
-        PrintWriter writer = null;
-        BufferedReader reader = null;
 
         try {
             socket = new Socket(SERVER, PORT);
-            // Writing to the socket
-            writer = new PrintWriter(socket.getOutputStream(), true);
-            // Reading from the socket
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-            clientProtocol.processResponse(stdIn, reader, writer);
+
+            try ( // Crear un objeto Scanner para leer la entrada del usuario
+            Scanner scanner = new Scanner(System.in)) {
+                // Solicitar al usuario que ingrese un número
+                System.out.println("Enter the number of clients to create: ");
+
+                // Leer el número ingresado por el usuario
+                int numberOfClients = scanner.nextInt();
+
+                int idDelegatedClient = 0;
+                while(idDelegatedClient < numberOfClients) {
+                    DelegatedClient delegatedClient = new DelegatedClient(socket, idDelegatedClient);
+                    idDelegatedClient++;
+                    delegatedClient.start();
+                }
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            if (socket != null) {
-                socket.close();
-            }
-            if (writer != null) {
-                writer.close();
-            }
-            if (reader != null) {
-                reader.close();
-            }
-        }
+        } 
     }
-
 
 }
