@@ -12,8 +12,6 @@ public class Client {
             Socket socket = new Socket(SERVER, PORT);
             DelegatedClient delegatedClient = new DelegatedClient(socket, PORT);
             delegatedClient.start();
-            // Si necesitas que el cliente principal espere a que todos terminen, puedes usar join() aquí,
-            // pero esto hará que cada cliente deba terminar antes de que el siguiente pueda comenzar.
             delegatedClient.join();
         } catch (Exception e) {
             e.printStackTrace();
@@ -21,6 +19,6 @@ public class Client {
     }
 
     public static void main(String[] args) {
-        startClient(); // Mantiene la capacidad de correr un solo cliente si se desea.
+        startClient(); 
     }
 }

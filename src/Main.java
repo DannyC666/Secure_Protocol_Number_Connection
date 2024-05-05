@@ -20,7 +20,7 @@ public class Main {
         serverThread.start();
 
         // Pequeña pausa para asegurar que el servidor está corriendo antes de iniciar clientes
-        Thread.sleep(1000); // Ajusta este tiempo según sea necesario
+        Thread.sleep(1000); 
 
         System.out.println("Hello and welcome! How many delegated clients would you like to create?");
         int numberOfClients = Integer.parseInt(reader.readLine());
@@ -28,7 +28,7 @@ public class Main {
         for (int i = 0; i < numberOfClients; i++) {
             System.out.println("Starting client " + (i + 1));
             Client.startClient();
-            Thread.sleep(500); // Espacio entre clientes para evitar sobrecarga instantánea en el servidor
+            Thread.sleep(500); // Espacio entre clientes para evitar sobrecarga
         }
     }
 }
