@@ -27,8 +27,9 @@ public class ClientProtocol {
     public  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
         try {
             // Reads from terminal
-            System.out.print("Write the message to send: ");
-            String fromUser = stdIn.readLine();
+            // System.out.print("Write the message to send: ");
+            // String fromUser = stdIn.readLine();
+            String fromUser = "reto";
             // Sends trough network
             pOut.println(fromUser);
             int stepConnection = 0;
@@ -59,10 +60,12 @@ public class ClientProtocol {
                     // Second image:
                     pIn.readLine(); // "Continuar :)"
                     // 13-14.Send login and password
-                    System.out.print("Login: ");
-                    String login = stdIn.readLine();
-                    System.out.print("Password: ");
-                    String password = stdIn.readLine();
+                    // System.out.print("Login: ");
+                    // String login = stdIn.readLine();
+                    String login = "Tony Stark";
+                    // System.out.print("Password: ");
+                    // String password = stdIn.readLine();
+                    String password = "MarkXLII";
                     String[] dataSesion = authLogInverfy(login,password).split(":");
                     pOut.println(dataSesion[0]); // login
                     pOut.println(dataSesion[1]); // password
@@ -71,8 +74,9 @@ public class ClientProtocol {
                     String flagServer =pIn.readLine();
                     if (Objects.equals(flagServer, "OK Login")){
                         System.out.println("Succesfully login");
-                        System.out.print("Enter a query:");
-                        fromUser = stdIn.readLine();// Send Query
+                        // System.out.print("Enter a query:");
+                        // fromUser = stdIn.readLine();// Send Query
+                        fromUser = "QueryTest";
                         String encryptionQuery = diffieHellman.AESEncryptionAB1(fromUser,AESDataKey);
                         String encryptionHMACQuery = diffieHellman.encryptHmac(fromUser,AESAuthKey);
                         pOut.println(encryptionQuery);
