@@ -9,51 +9,40 @@ import java.net.Socket;
 public class DelegatedClient extends Thread {
     private int idDelegatedClient;
     private Socket socket;
-    PrintWriter writer = null;
-    BufferedReader reader = null;
-    BufferedReader stdIn = null;
+    private PrintWriter writer = null;
+    private BufferedReader reader = null;
+    private BufferedReader stdIn = null;
 
     public DelegatedClient(Socket socket, int idDelegatedClient) {
         this.socket = socket;
         this.idDelegatedClient = idDelegatedClient;
+        this.stdIn = new BufferedReader(new InputStreamReader(System.in));
     }
- 
-    public void run(){
+
+    public void run() {
         System.out.println("New delegated client: " + idDelegatedClient);
-
         try {
-            // Writing to the socket
             writer = new PrintWriter(socket.getOutputStream(), true);
-            // Reading from the socket
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            // stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-            //ClientProtocol.processResponse(reader, writer);
-
+            ClientProtocol clientProtocol = new ClientProtocol();
+            clientProtocol.processResponse(stdIn, reader, writer);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
-            if (socket != null) {
-                try {
+        } finally {
+            try {
+                if (socket != null) {
                     socket.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
-            }
-            if (writer != null) {
-                writer.close();
-            }
-            if (reader != null) {
-                try {
+                if (writer != null) {
+                    writer.close();
+                }
+                if (reader != null) {
                     reader.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
-
 }
