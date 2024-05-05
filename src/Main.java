@@ -1,37 +1,34 @@
-import javax.crypto.spec.IvParameterSpec;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import ClientConfig.Client;
+import ServerConfig.Server; 
 
-
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, IOException {
+    public static void main(String[] args) throws Exception {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        
+        // Inicia el servidor en un hilo separado para que pueda comenzar a escuchar conexiones
+        System.out.println("Starting the server...");
+        Thread serverThread = new Thread(() -> {
+            try {
+                Server.main(new String[0]); 
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        serverThread.start();
 
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
-        System.out.println("");
-        IvParameterSpec iv = GeneratorIv.generateIv();
-        System.out.print("Generated IV (Hex): ");
-        for (byte b : iv.getIV()) {
-            System.out.format("%02x", b); 
-        }
-        System.out.println("");
-        System.out.print("Generated IV (Decimal): ");
-        for (byte b : iv.getIV()) {
-            System.out.print((b & 0xFF) + " "); 
-        }
-        System.out.println(); 
-        System.out.println("Hola");
-        for (int i = 1; i <= 5; i++) {
-            System.out.println("i = " + i);
-        }
+        // Pequeña pausa para asegurar que el servidor está corriendo antes de iniciar clientes
+        Thread.sleep(1000); // Ajusta este tiempo según sea necesario
 
+        System.out.println("Hello and welcome! How many delegated clients would you like to create?");
+        int numberOfClients = Integer.parseInt(reader.readLine());
+
+        for (int i = 0; i < numberOfClients; i++) {
+            System.out.println("Starting client " + (i + 1));
+            Client.startClient();
+            Thread.sleep(500); // Espacio entre clientes para evitar sobrecarga instantánea en el servidor
+        }
     }
 }
