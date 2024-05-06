@@ -24,12 +24,12 @@ public class ClientProtocol {
 
     }
 
-    public  void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
+    public synchronized void processResponse(BufferedReader stdIn, BufferedReader pIn, PrintWriter pOut) {
         try {
             // Reads from terminal
             // System.out.print("Write the message to send: ");
             // String fromUser = stdIn.readLine();
-            String fromUser = "reto";
+            String fromUser = "SYN";
             // Sends trough network
             pOut.println(fromUser);
             int stepConnection = 0;
@@ -40,7 +40,7 @@ public class ClientProtocol {
                     String[] serverAnswer = fromServer.split(":");
                     decodePublicKey(serverAnswer[2]);
                     // 4.Verify the signature of the server
-                    if(verfyRSAContent(serverAnswer[0], serverAnswer[1])){
+                    if(verifyRSAContent(serverAnswer[0], serverAnswer[1])){
                         pOut.println("OK ACK");
                     }else{
                         pOut.println("ERROR!");
@@ -96,7 +96,7 @@ public class ClientProtocol {
         }
     }
 
-        private static boolean verfyRSAContent(String messageServerEncrypted, String messageServer) {
+        private static boolean verifyRSAContent(String messageServerEncrypted, String messageServer) {
         boolean isServer = false;
         try {
             Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -118,7 +118,7 @@ public class ClientProtocol {
         G = serverGenDH[3];
         P = serverGenDH[4];
         Gx =  serverGenDH[5];
-        if(verfyRSAContent(encryptG,G) && verfyRSAContent(encryptP,P)  && verfyRSAContent(encryptGx,Gx) ){
+        if(verifyRSAContent(encryptG,G) && verifyRSAContent(encryptP,P)  && verifyRSAContent(encryptGx,Gx) ){
             isServerAuth = true;
         }
         return  isServerAuth;
@@ -126,9 +126,7 @@ public class ClientProtocol {
 
     private static void decodePublicKey(String publicKeyBase64){
         try {
-            // Decodificar la cadena Base64 de la clave pública
             byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyBase64);
-            // Deserializar la clave pública
             ByteArrayInputStream bais = new ByteArrayInputStream(publicKeyBytes);
             ObjectInputStream ois = new ObjectInputStream(bais);
             publicKey= (PublicKey) ois.readObject();

@@ -42,7 +42,7 @@ public class ServerProtocol {
         x = diffieHellman.generateRandomPrivateKey();
     }
 
-    public  void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
+    public  synchronized  void processMessage(BufferedReader readIn, PrintWriter writeOut) throws IOException, NoSuchPaddingException, IllegalBlockSizeException, NoSuchAlgorithmException, BadPaddingException, InvalidKeyException {
         String inputLine;
         // 3. Server receives a SYN request form client and reply
         inputLine = readIn.readLine();

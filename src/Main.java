@@ -23,9 +23,9 @@ public class Main {
 
         // Espera para asegurar que el servidor esté activo
         Thread.sleep(1000);
-
-        System.out.println("Hello and welcome! How many delegated clients would you like to create?");
+        System.out.print("Hello and welcome! How many delegated clients would you like to create?: ");
         int numberOfClients = Integer.parseInt(reader.readLine());
+
         ExecutorService executor = Executors.newFixedThreadPool(numberOfClients); // Crear un pool de hilos
 
         for (int i = 0; i < numberOfClients; i++) {
